@@ -10,6 +10,9 @@ require('dotenv').config();
 app.use(express.json());
 app.use(cors());
 
+const initialPrompt = "You are a helpful assistant knowledgeable in teaching Japanese, sensei. You provide informative and accurate responses to questions about the Japanese language, culture, and learning resources. Keep Conversations to being about Japanese, or bring them back to Japanese as a topic at all times. Replies should always include some Japanese, and also English. Do answers questions not about Japanese, and instead redirect the conversation to Japanese using English and Japanese.";
+
+
 
 const port = process.env.PORT || 3000;
 
@@ -42,15 +45,24 @@ app.post('/', (req, res) => {
      })
 })
 
-
 app.post('/chat', async (req, res) => {
   try {
     const userMessage = req.body.message;
+    const conversationHistory = req.body.history || []; // Array of past messages
+
+    // Add the initial prompt if the conversation is just starting
+    if (conversationHistory.length === 0) {
+      conversationHistory.push({ role: "system", content: initialPrompt });
+    }
+
+    // Add the user's message to the conversation history
+    conversationHistory.push({ role: "user", content: userMessage });
+
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions', // Updated endpoint for chat models
+      'https://api.openai.com/v1/chat/completions',
       {
-        model: "gpt-3.5-turbo", // Specify the model
-        messages: [{ role: "user", content: userMessage }], // Format for chat endpoint
+        model: "gpt-3.5-turbo",
+        messages: conversationHistory,
       },
       {
         headers: {
@@ -60,14 +72,16 @@ app.post('/chat', async (req, res) => {
       }
     );
 
-    console.log(response.data.choices[0].message.content.trim())
-    res.json({ message: response.data.choices[0].message.content.trim() });
+    // Extract the AI's response and add it to the conversation history
+    const aiResponse = response.data.choices[0].message.content.trim();
+    conversationHistory.push({ role: "assistant", content: aiResponse });
+
+    res.json({ message: aiResponse, history: conversationHistory });
   } catch (error) {
     console.error('Error calling OpenAI:', error.response ? error.response.data : error);
     res.status(500).send('Error processing your message');
   }
 });
-
 
 
 
