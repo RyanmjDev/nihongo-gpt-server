@@ -3,10 +3,28 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const ChatMessage = require('./models/ChatMessage');
+const jwt = require('jsonwebtoken');
+
+function generateToken(user) {
+  const payload = {
+    userId: user._id,
+    email: user.email,
+    // Add any additional data you want to include in the token payload
+  };
+
+  const options = {
+    expiresIn: '1h', // Set the expiration time for the token
+  };
+
+  const secretKey = process.env.JWT_SECRET; // Replace with your own secret key
+
+  return jwt.sign(payload, secretKey, options);
+}
 
 
 
-const axios = require('axios')
+const axios = require('axios');
+const User = require('./models/User');
 
 require('dotenv').config();
 app.use(express.json());
@@ -48,7 +66,6 @@ app.post('/', (req, res) => {
 })
 
 // Route for logging
-
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -63,6 +80,7 @@ app.post('/login', async (req, res) => {
 
     // Check if the user exists
     if (!user) {
+
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -70,6 +88,7 @@ app.post('/login', async (req, res) => {
     const isPasswordValid = await user.comparePassword(password);
 
     if (!isPasswordValid) {
+      console.log("password problems bro")
       return res.status(401).json({ message: 'Invalid password' });
     }
 
@@ -85,7 +104,7 @@ app.post('/login', async (req, res) => {
 
 
 
-app.post('/chat', async (req, res) => {
+app.post('/chat', async (req, res) => { 
   try {
     const userMessage = req.body.message;
     const conversationHistory = req.body.history || []; // Array of past messages
