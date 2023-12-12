@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const ChatMessage = require('../models/ChatMessage');
 const axios = require('axios');
+
+const User = require('../models/User');
+const ChatMessage = require('../models/ChatMessage');
+const auth = require('../utils/auth');
+
 require('dotenv').config();
 
 const initialPrompt = require('../prompts/initialPrompt');
@@ -16,9 +20,13 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
     try {
+        const user = await User.findById(req.user._id);
+
         const userMessage = req.body.message;
+        console.log(userMessage);
+
         const conversationHistory = req.body.history || []; 
 
         if (conversationHistory.length === 0) {
@@ -43,6 +51,20 @@ router.post('/', async (req, res) => {
 
         const aiResponse = response.data.choices[0].message.content.trim();
         conversationHistory.push({ role: "assistant", content: aiResponse });
+
+        
+        // Create and save user message
+        const userChatMessage = new ChatMessage({ message: userMessage, isUser: true });
+        await userChatMessage.save();
+        user.chatMessages.push(userChatMessage._id);
+
+        // Create and save AI response
+        const aiChatMessage = new ChatMessage({ message: aiResponse, isUser: false });
+        await aiChatMessage.save();
+        user.chatMessages.push(aiChatMessage._id);
+
+        await user.save();
+
 
         res.json({ message: aiResponse, history: conversationHistory });
       } catch (error) {

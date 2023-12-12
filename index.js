@@ -12,7 +12,17 @@ const User = require('./models/User');
 
 require('dotenv').config();
 app.use(express.json());
-app.use(cors());
+
+const corsOptions = {
+  origin: 'http://localhost:5173', 
+  credentials: true, 
+};
+
+app.use(cors(corsOptions));
+
+app.use('/users', userRoutes);
+app.use('/chat', chatRoutes);
+
 
 
 
@@ -30,17 +40,6 @@ app.get('/', (req, res) => {
   res.send('Hello, NihongoGPT!');
 });
 
-
-// app.post('/', (req, res) => {
-//      const message = new ChatMessage({
-//         message: req.body.message,
-//         isUser: req.body.isUser,
-//      })
-// })
-
-
-app.use('/users', userRoutes);
-app.use('/chat', chatRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
