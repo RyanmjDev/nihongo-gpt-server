@@ -11,13 +11,18 @@ require('dotenv').config();
 const initialPrompt = require('../prompts/initialPrompt');
 
 
-router.get('/', async (req, res) => {
-    try {
-        const messages = await ChatMessage.find();
-        res.json(messages);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+router.get('/', auth, async (req, res) => {
+  try {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      const messages = await ChatMessage.find({ _id: { $in: user.chatMessages } });
+      res.json(messages);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
 });
 
 router.post('/', auth, async (req, res) => {
