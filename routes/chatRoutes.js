@@ -83,12 +83,24 @@ router.get('/notes', auth, async (req, res) => {
   try {
       const user = await User.findById(req.user._id);
       if (!user) {
+          console.log("User not found with ID:", req.user._id);
           return res.status(404).json({ message: "User not found" });
       }
 
+      console.log("User's notes ObjectIds:", user.notes);
+
       const notes = await ChatMessage.find({ _id: { $in: user.notes } });
+
+      // Check if notes array is empty after the query
+      if (notes.length === 0) {
+          console.log("No ChatMessage documents found for provided ObjectIds in user.notes");
+      }
+
+      console.log("Fetched notes:", notes);
+
       res.json(notes);
   } catch (error) {
+      console.error('Error fetching notes:', error);
       res.status(500).json({ message: error.message });
   }
 });
@@ -100,12 +112,13 @@ router.post( '/notes', auth, async (req, res) => {
           return res.status(404).json({ message: "User not found" });
       }
 
-      const note = req.body.note;
+      const note = req.body.message;
       const noteMessage = new ChatMessage({ message: note, isUser: false });
       await noteMessage.save();
       user.notes.push(noteMessage._id);
       await user.save();
 
+      console.log("note saved: ", noteMessage);
       res.json(noteMessage);
   } catch (error) {
       res.status(500).json({ message: error.message });
