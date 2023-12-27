@@ -25,6 +25,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+
 router.post('/', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -76,6 +77,39 @@ router.post('/', auth, async (req, res) => {
         console.error('Error calling OpenAI:', error.response ? error.response.data : error);
         res.status(500).send('Error processing your message');
       }
+});
+
+router.get('/notes', auth, async (req, res) => {
+  try {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      const notes = await ChatMessage.find({ _id: { $in: user.notes } });
+      res.json(notes);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+});
+
+router.post( '/notes', auth, async (req, res) => {
+  try {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      const note = req.body.note;
+      const noteMessage = new ChatMessage({ message: note, isUser: false });
+      await noteMessage.save();
+      user.notes.push(noteMessage._id);
+      await user.save();
+
+      res.json(noteMessage);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;

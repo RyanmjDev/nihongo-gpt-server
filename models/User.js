@@ -22,6 +22,10 @@ const userSchema = new Schema({
     chatMessages: [{
         type: Schema.Types.ObjectId,
         ref: 'ChatMessage'
+    }],
+    notes: [{
+        type: Schema.Types.ObjectId,
+        ref: 'ChatMessage'
     }]
 });
 
