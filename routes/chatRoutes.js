@@ -125,4 +125,34 @@ router.post( '/notes', auth, async (req, res) => {
   }
 });
 
+router.delete('/notes/:noteId', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const noteId = req.params.noteId;
+
+    // Find the index of the note in the user's notes array
+    const noteIndex = user.notes.indexOf(noteId);
+
+    // If the note is not found in the user's notes array, return an error
+    if (noteIndex === -1) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // Remove the note from the user's notes array
+    user.notes.splice(noteIndex, 1);
+
+    // Save the updated user object
+    await user.save();
+
+    res.json({ message: "Note removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 module.exports = router;
