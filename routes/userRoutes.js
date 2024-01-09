@@ -41,4 +41,35 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Route for registering a new user
+router.post('/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if the name, email, and password are provided
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    // Check if the email is already registered
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    // Create a new user
+    const newUser = new User({ name, email, password });
+    await newUser.save();
+
+    // Generate a JWT token for authentication
+    const token = generateToken(newUser);
+    console.log("Successfully registered and logged in!");
+    res.json({ token });
+  } catch (error) {
+    console.error('Error registering:', error);
+    res.status(500).json({ message: 'Error registering' });
+  }
+});
+
+
 module.exports = router;
