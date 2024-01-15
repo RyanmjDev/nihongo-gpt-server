@@ -25,8 +25,19 @@ const userSchema = new Schema({
     }],
     notes: [{
         type: Schema.Types.ObjectId,
-        ref: 'ChatMessage'
-    }]
+        ref: 'ChatMessage',
+    }],
+
+    createdAt: { 
+            type: Date, 
+            default: Date.now, 
+            index: { expires: '24h' } 
+          },
+    isDemo: {
+            type: Boolean,
+            default: false
+          }
+ 
 });
 
 // Compare the provided password with the stored password

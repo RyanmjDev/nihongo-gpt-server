@@ -2,6 +2,11 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const { v4: uuidv4 } = require('uuid');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+
 
 const router = express.Router();
 
@@ -41,6 +46,22 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.post('/demo', async (req, res) => {
+  try {
+    const demoEmail = `demo-${uuidv4()}@kaiwakun.com`;
+    const hashedPassword = await bcrypt.hash("demo", saltRounds);
+    const demoUser = new User({ name: "Demo User", email: demoEmail, password: hashedPassword, isDemo: true });
+    await demoUser.save();
+    const token = generateToken(demoUser);
+    console.log("Demo user created and logged in!");
+    res.json({ token });
+  } catch (error) {
+    console.error('Error creating Demo User:', error);
+    res.status(500).json({ message: 'Error creating Demo User' });
+  }
+});
+
+
 // Route for registering a new user
 router.post('/register', async (req, res) => {
   try {
@@ -57,8 +78,12 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     // Create a new user
-    const newUser = new User({ name, email, password });
+
+    const newUser = new User({ name, email, password:hashedPassword });
     await newUser.save();
 
     // Generate a JWT token for authentication

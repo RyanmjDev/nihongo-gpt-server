@@ -7,6 +7,9 @@ const jwt = require('jsonwebtoken');
 const chatRoutes = require('./routes/chatRoutes');
 const userRoutes = require('./routes/userRoutes');
 
+const deleteOldDemoAccounts = require('./utils/deleteOldDemoAccounts');
+const cron = require('node-cron');
+
 const axios = require('axios');
 const User = require('./models/User');
 
@@ -24,8 +27,6 @@ app.use('/users', userRoutes);
 app.use('/chat', chatRoutes);
 
 
-
-
 const port = process.env.PORT || 3000;
 
 
@@ -36,8 +37,12 @@ mongoose.connect(mongoDBUri, { useNewUrlParser: true, useUnifiedTopology: true }
 mongoose.connection.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 
+// Run the function every day at midnight to delete old demo accounts
+cron.schedule('0 0 * * *', deleteOldDemoAccounts);
+
+
 app.get('/', (req, res) => {
-  res.send('Hello, NihongoGPT!');
+  res.send('Hello, Welcome to Kaiwakun!');
 });
 
 

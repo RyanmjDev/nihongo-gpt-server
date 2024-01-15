@@ -79,6 +79,28 @@ router.post('/', auth, async (req, res) => {
       }
 });
 
+
+router.delete('/', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete all chat messages associated with the user
+    await ChatMessage.deleteMany({ _id: { $in: user.chatMessages } });
+
+    // Clear the user's notes array. COME BACK TO THIS!
+    user.notes = [];
+    await user.save();
+
+    res.json({ message: "Chat history deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 router.get('/notes', auth, async (req, res) => {
   try {
       const user = await User.findById(req.user._id);
