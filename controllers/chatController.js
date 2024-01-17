@@ -13,18 +13,25 @@ const initialPrompt = require('../prompts/initialPrompt');
 
 exports.getMessages = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
   
-        const messages = await ChatMessage.find({ _id: { $in: user.chatMessages } });
-        res.json(messages);
+      const limit = parseInt(req.query.limit) || 20; // Load 20 messages at a time. 
+      const skip = parseInt(req.query.skip) || 0;
+  
+      const messages = await ChatMessage.find({ _id: { $in: user.chatMessages } })
+                                        .sort({ createdAt: -1 }) 
+                                        .skip(skip)
+                                        .limit(limit);
+                                    
+  
+      res.json(messages);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
-  }
-
+  };
 
 exports.postMessage = async (req, res) => {
     try {
