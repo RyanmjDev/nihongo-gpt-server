@@ -87,6 +87,3 @@ exports.register = async (req, res) => {
         res.status(500).json({ message: 'Error registering' });
       }
 }
-
-exports.register = async (req, res) => {
-}
