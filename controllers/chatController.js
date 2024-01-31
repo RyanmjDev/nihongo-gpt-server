@@ -18,17 +18,19 @@ exports.getMessages = async (req, res) => {
         return res.status(404).json({ message: "User not found" });
       }
   
-      const limit = parseInt(req.query.limit) || 20; // Load 20 messages at a time. 
-      const skip = parseInt(req.query.skip) || 0;
+      const limit = parseInt(req.query.limit) || 20;  
+      const page = parseInt(req.query.page) || 1;
   
       const messages = await ChatMessage.find({ _id: { $in: user.chatMessages } })
                                         .sort({ createdAt: -1 }) 
-                                        .skip(skip)
-                                        .limit(limit);
+                                        .skip((page - 1) * limit)
+                                        .limit(limit)
+                                        .exec();
                                     
   
       res.json(messages);
     } catch (error) {
+      console.log("Error fetching messages:", error);
       res.status(500).json({ message: error.message });
     }
   };
